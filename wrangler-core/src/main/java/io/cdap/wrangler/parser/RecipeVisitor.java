@@ -38,6 +38,13 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import io.cdap.wrangler.api.parser.ByteSize;
+import io.cdap.wrangler.api.parser.TimeDuration;
+import io.cdap.wrangler.parser.grammar.DirectivesParser;
+import io.cdap.wrangler.parser.grammar.DirectivesBaseVisitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +71,7 @@ import java.util.Map;
  * that is returned by this function.</p>
  */
 public final class RecipeVisitor extends DirectivesBaseVisitor<RecipeSymbol.Builder> {
+  private static final Logger LOG = LoggerFactory.getLogger(RecipeVisitor.class);
   private RecipeSymbol.Builder builder = new RecipeSymbol.Builder();
 
   /**
@@ -164,10 +172,10 @@ public final class RecipeVisitor extends DirectivesBaseVisitor<RecipeSymbol.Buil
         text = text.substring(1, text.length() - 1);
       }
       Triplet<Numeric, Numeric, String> val =
-        new Triplet<>(new Numeric(new LazyNumber(numbers.get(0).getText())),
+              new Triplet<>(new Numeric(new LazyNumber(numbers.get(0).getText())),
                       new Numeric(new LazyNumber(numbers.get(1).getText())),
                       text
-        );
+              );
       output.add(val);
     }
     builder.addToken(new Ranges(output));
@@ -315,6 +323,70 @@ public final class RecipeVisitor extends DirectivesBaseVisitor<RecipeSymbol.Buil
     }
     builder.addToken(new TextList(strs));
     return builder;
+  }
+
+  /**
+   * Visits a byte size argument context and creates a ByteSize token.
+   *
+   * @param ctx The parse tree node for byte size argument
+   * @return RecipeSymbol.Builder containing the parsed ByteSize token
+   * @throws IllegalArgumentException if the byte size format is invalid
+   */
+  @Override
+  public RecipeSymbol.Builder visitByteSizeArg(DirectivesParser.ByteSizeArgContext ctx) {
+    if (ctx == null || ctx.getText() == null) {
+      throw new IllegalArgumentException("Byte size argument context cannot be null");
+    }
+
+    String input = ctx.getText().trim();
+    LOG.debug("Parsing byte size argument: '{}'", input);
+
+    try {
+      ByteSize byteSize = new ByteSize(input);
+      LOG.trace("Successfully parsed byte size: {}", byteSize);
+      builder.addToken(byteSize);
+      return builder;
+    } catch (IllegalArgumentException e) {
+      String errorMsg = String.format(
+              "Invalid byte size format '%s'. Expected format like 10KB, 1.5MB, 2GiB. %s",
+              input,
+              e.getMessage()
+      );
+      LOG.error(errorMsg);
+      throw new IllegalArgumentException(errorMsg, e);
+    }
+  }
+
+  /**
+   * Visits a time duration argument context and creates a TimeDuration token.
+   *
+   * @param ctx The parse tree node for time duration argument
+   * @return RecipeSymbol.Builder containing the parsed TimeDuration token
+   * @throws IllegalArgumentException if the time duration format is invalid
+   */
+  @Override
+  public RecipeSymbol.Builder visitTimeDurationArg(DirectivesParser.TimeDurationArgContext ctx) {
+    if (ctx == null || ctx.getText() == null) {
+      throw new IllegalArgumentException("Time duration argument context cannot be null");
+    }
+
+    String input = ctx.getText().trim();
+    LOG.debug("Parsing time duration argument: '{}'", input);
+
+    try {
+      TimeDuration timeDuration = new TimeDuration(input);
+      LOG.trace("Successfully parsed time duration: {}", timeDuration);
+      builder.addToken(timeDuration);
+      return builder;
+    } catch (IllegalArgumentException e) {
+      String errorMsg = String.format(
+              "Invalid time duration format '%s'. Expected format like 100ms, 1.5s, 2h. %s",
+              input,
+              e.getMessage()
+      );
+      LOG.error(errorMsg);
+      throw new IllegalArgumentException(errorMsg, e);
+    }
   }
 
   private SourceInfo getOriginalSource(ParserRuleContext ctx) {

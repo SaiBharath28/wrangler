@@ -19,41 +19,47 @@ package io.cdap.wrangler.api.parser;
 import com.google.gson.JsonElement;
 import io.cdap.wrangler.api.annotations.PublicEvolving;
 
-import java.io.Serializable;
-
 /**
- * The Token class represents the object that contains the value and type of
- * the token as parsed by the parser of the grammar defined for recipe.
+ * Interface representing a parsed token from directives. All token types must implement this interface
+ * to ensure consistent behavior across different token implementations.
  *
- * <p>This class provides methods for retrieving the wrapped value of token parsed
- * as well the type of token the implementation of this interface represents.</p>
+ * <p>Implementing classes should:</p>
+ * <ul>
+ *   <li>Provide immutable implementations</li>
+ *   <li>Maintain thread safety</li>
+ *   <li>Include proper null checks in constructors</li>
+ *   <li>Implement proper equals() and hashCode() methods</li>
+ * </ul>
  *
- * <p>It also provides method for providing the {@code JsonElement} of implementation
- * of this interface.</p>
+ * @see ByteSize
+ * @see TimeDuration
+ * @see TokenType
  */
 @PublicEvolving
-public interface Token extends Serializable {
-  /**
-   * Returns the {@code value} of the object wrapped by the
-   * implementation of this interface.
-   *
-   * @return {@code value} wrapped by the implementation of this interface.
-   */
-  Object value();
+public interface Token {
+    /**
+     * Returns the underlying value of the token in its canonical form.
+     * The returned object should be immutable.
+     *
+     * @return The token's value as an Object (typically a primitive wrapper or immutable type)
+     * @throws IllegalStateException if the token value cannot be computed
+     */
+    Object value();
 
-  /**
-   * Returns the {@code TokenType} of the object represented by the
-   * implementation of this interface.
-   *
-   * @return {@code TokenType} of the implementation object.
-   */
-  TokenType type();
+    /**
+     * Returns the specific type of the token from the {@link TokenType} enumeration.
+     * This method should always return the same value for a given implementation.
+     *
+     * @return TokenType enum value representing the token's type
+     */
+    TokenType type();
 
-  /**
-   * The class implementing this interface will return the {@code JsonElement}
-   * instance including the values of the object.
-   *
-   * @return {@code JsonElement} object containing members of  implementing class.
-   */
-  JsonElement toJson();
+    /**
+     * Provides JSON serialization of the token's complete state including both its type and value.
+     * The implementation should include all relevant information needed to reconstruct the token.
+     *
+     * @return JsonElement representing the complete token state
+     * @throws IllegalStateException if the token cannot be serialized
+     */
+    JsonElement toJson();
 }

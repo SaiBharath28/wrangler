@@ -78,7 +78,42 @@ public final class SystemDirectiveRegistry implements DirectiveRegistry {
    * @throws DirectiveLoadException thrown if there are any issue loading the directive.
    */
   public SystemDirectiveRegistry(List<String> namespaces) throws DirectiveLoadException {
-    Map<String, DirectiveInfo> registry = new HashMap<>();
+    registry = new HashMap<>();
+    initialize();
+    loadDirectives(namespaces);
+  }
+
+  /**
+   * Initializes the registry with system directives.
+   */
+  @Override
+  public void initialize() {
+    // ... existing directives ...
+    register("aggregate-stats", AggregateStats.class);  // Add this line
+  }
+
+  /**
+   * Registers a directive with the specified name and class.
+   *
+   * @param name the name of the directive
+   * @param directiveClass the class implementing the directive
+   */
+  private void register(String name, Class<? extends Directive> directiveClass) {
+    try {
+      DirectiveInfo info = DirectiveInfo.fromSystem(directiveClass);
+      registry.put(name, info);
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new RuntimeException("Failed to register directive " + name, e);
+    }
+  }
+
+  /**
+   * Loads directives from the specified namespaces using reflection.
+   *
+   * @param namespaces list of package namespaces to scan for directives
+   * @throws DirectiveLoadException if there are issues loading the directives
+   */
+  private void loadDirectives(List<String> namespaces) throws DirectiveLoadException {
     namespaces.add(PACKAGE);
     for (String namespace : namespaces) {
       try {
@@ -92,7 +127,6 @@ public final class SystemDirectiveRegistry implements DirectiveRegistry {
         throw new DirectiveLoadException(e.getMessage(), e);
       }
     }
-    this.registry = Collections.unmodifiableMap(registry);
   }
 
   /**

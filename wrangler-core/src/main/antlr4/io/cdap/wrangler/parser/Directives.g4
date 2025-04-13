@@ -1,17 +1,16 @@
 /*
  * Copyright © 2017-2019 Cask Data, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  */
 
 grammar Directives;
@@ -24,34 +23,34 @@ options {
 /*
  * Copyright © 2017-2019 Cask Data, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  */
 }
 
-/**
- * Parser Grammar for recognizing tokens and constructs of the directives language.
- */
+// =======================
+// Parser Rules
+// =======================
+
 recipe
- : statements EOF
- ;
+  : statements EOF
+  ;
 
 statements
- :  ( Comment | macro | directive ';' | pragma ';' | ifStatement)*
- ;
+  : ( COMMENT | macro | directive ';' | pragma ';' | ifStatement )*
+  ;
 
 directive
- : command
-  (   codeblock
+  : command
+    ( codeblock
     | identifier
     | macro
     | text
@@ -64,7 +63,7 @@ directive
     | stringList
     | numberRanges
     | properties
-  )*?
+    )*?
   ;
 
 ifStatement
@@ -88,226 +87,239 @@ expression
   ;
 
 forStatement
- : 'for' '(' Identifier '=' expression ';' expression ';' expression ')' '{'  statements '}'
- ;
+  : 'for' '(' IDENTIFIER '=' expression ';' expression ';' expression ')' '{' statements '}'
+  ;
 
 macro
- : Dollar OBrace (~OBrace | macro | Macro)*? CBrace
- ;
+  : DOLLAR OBRACE (~OBRACE | macro | MACRO)*? CBRACE
+  ;
 
 pragma
- : '#pragma' (pragmaLoadDirective | pragmaVersion)
- ;
+  : '#pragma' (pragmaLoadDirective | pragmaVersion)
+  ;
 
 pragmaLoadDirective
- : 'load-directives' identifierList
- ;
+  : 'load-directives' identifierList
+  ;
 
 pragmaVersion
- : 'version' Number
- ;
+  : 'version' NUMBER
+  ;
 
 codeblock
- : 'exp' Space* ':' condition
- ;
+  : 'exp' SPACE* ':' condition
+  ;
 
 identifier
- : Identifier
- ;
+  : IDENTIFIER
+  ;
 
 properties
- : 'prop' ':' OBrace (propertyList)+  CBrace
- | 'prop' ':' OBrace OBrace (propertyList)+ CBrace { notifyErrorListeners("Too many start paranthesis"); }
- | 'prop' ':' OBrace (propertyList)+ CBrace CBrace { notifyErrorListeners("Too many start paranthesis"); }
- | 'prop' ':' (propertyList)+ CBrace { notifyErrorListeners("Missing opening brace"); }
- | 'prop' ':' OBrace (propertyList)+  { notifyErrorListeners("Missing closing brace"); }
- ;
+  : 'prop' ':' OBRACE (propertyList)+ CBRACE
+  | 'prop' ':' OBRACE OBRACE (propertyList)+ CBRACE { notifyErrorListeners("Too many start paranthesis"); }
+  | 'prop' ':' OBRACE (propertyList)+ CBRACE CBRACE { notifyErrorListeners("Too many start paranthesis"); }
+  | 'prop' ':' (propertyList)+ CBRACE { notifyErrorListeners("Missing opening brace"); }
+  | 'prop' ':' OBRACE (propertyList)+ { notifyErrorListeners("Missing closing brace"); }
+  ;
 
 propertyList
- : property (',' property)*
- ;
+  : property (',' property)*
+  ;
 
 property
- : Identifier '=' ( text | number | bool )
- ;
+  : IDENTIFIER '=' ( text | number | bool | BYTE_SIZE | TIME_DURATION )
+  ;
 
 numberRanges
- : numberRange ( ',' numberRange)*
- ;
+  : numberRange ( ',' numberRange)*
+  ;
 
 numberRange
- : Number ':' Number '=' value
- ;
+  : NUMBER ':' NUMBER '=' value
+  ;
 
 value
- : String | Number | Column | Bool
- ;
+  : number         #numericValue
+  | text           #stringValue
+  | identifier     #identifierValue
+  | bool           #booleanValue
+  | BYTE_SIZE      #byteSizeValue
+  | TIME_DURATION  #timeDurationValue
+  ;
 
 ecommand
- : '!' Identifier
- ;
+  : '!' IDENTIFIER
+  ;
 
 config
- : Identifier
- ;
+  : IDENTIFIER
+  ;
 
 column
- : Column
- ;
+  : COLUMN
+  ;
 
 text
- : String
- ;
+  : STRING
+  ;
 
 number
- : Number
- ;
+  : NUMBER
+  ;
 
 bool
- : Bool
- ;
+  : BOOL
+  ;
 
 condition
- : OBrace (~CBrace | condition)* CBrace
- ;
+  : OBRACE (~CBRACE | condition)* CBRACE
+  ;
 
 command
- : Identifier
- ;
+  : IDENTIFIER
+  ;
 
 colList
- : Column (','  Column)+
- ;
+  : COLUMN (',' COLUMN)+
+  ;
 
 numberList
- : Number (',' Number)+
- ;
+  : NUMBER (',' NUMBER)+
+  ;
 
 boolList
- : Bool (',' Bool)+
- ;
+  : BOOL (',' BOOL)+
+  ;
 
 stringList
- : String (',' String)+
- ;
+  : STRING (',' STRING)+
+  ;
 
 identifierList
- : Identifier (',' Identifier)*
- ;
+  : IDENTIFIER (',' IDENTIFIER)*
+  ;
 
+// =======================
+// Lexer Rules (all uppercase)
+// =======================
 
-/*
- * Following are the Lexer Rules used for tokenizing the recipe.
- */
-OBrace   : '{';
-CBrace   : '}';
-SColon   : ';';
-Or       : '||';
-And      : '&&';
-Equals   : '==';
-NEquals  : '!=';
-GTEquals : '>=';
-LTEquals : '<=';
-Match    : '=~';
-NotMatch : '!~';
-QuestionColon : '?:';
-StartsWith : '=^';
-NotStartsWith : '!^';
-EndsWith : '=$';
-NotEndsWith : '!$';
-PlusEqual : '+=';
-SubEqual : '-=';
-MulEqual : '*=';
-DivEqual : '/=';
-PerEqual : '%=';
-AndEqual : '&=';
-OrEqual  : '|=';
-XOREqual : '^=';
-Pow      : '^';
-External : '!';
-GT       : '>';
-LT       : '<';
-Add      : '+';
-Subtract : '-';
-Multiply : '*';
-Divide   : '/';
-Modulus  : '%';
-OBracket : '[';
-CBracket : ']';
-OParen   : '(';
-CParen   : ')';
-Assign   : '=';
-Comma    : ',';
-QMark    : '?';
-Colon    : ':';
-Dot      : '.';
-At       : '@';
-Pipe     : '|';
-BackSlash: '\\';
-Dollar   : '$';
-Tilde    : '~';
+fragment BYTE_UNIT
+  : [kKmMgGtTpPeE] [i]? [bB]
+  | [bB]
+  ;
 
+BYTE_SIZE
+  : [0-9]+ ('.' [0-9]+)? SPACE* BYTE_UNIT
+  ;
 
-Bool
- : 'true'
- | 'false'
- ;
+TIME_DURATION
+  : [0-9]+ ('.' [0-9]+)? SPACE* ('ns'|'us'|'ms'|'s'|'m'|'h'|'d')
+  ;
 
-Number
- : Int ('.' Digit*)?
- ;
+OBRACE   : '{';
+CBRACE   : '}';
+SCOLON   : ';';
+OR       : '||';
+AND      : '&&';
+EQUALS   : '==';
+NEQUALS  : '!=';
+GTEQUALS : '>=';
+LTEQUALS : '<=';
+MATCH    : '=~';
+NOTMATCH : '!~';
+QUESTIONCOLON : '?:';
+STARTSWITH : '=^';
+NOTSTARTSWITH : '!^';
+ENDSWITH : '=$';
+NOTENDSWITH : '!$';
+PLUSEQUAL : '+=' ;
+SUBEQUAL : '-=' ;
+MULEQUAL : '*=' ;
+DIVEQUAL : '/=' ;
+PEREQUAL : '%=' ;
+ANDEQUAL : '&=' ;
+OREQUAL  : '|=' ;
+XOREQUAL : '^=' ;
+POW      : '^' ;
+EXTERNAL : '!' ;
+GT       : '>' ;
+LT       : '<' ;
+ADD      : '+' ;
+SUBTRACT : '-' ;
+MULTIPLY : '*' ;
+DIVIDE   : '/' ;
+MODULUS  : '%' ;
+OBRACKET : '[' ;
+CBRACKET : ']' ;
+OPAREN   : '(' ;
+CPAREN   : ')' ;
+ASSIGN   : '=' ;
+COMMA    : ',' ;
+QMARK    : '?' ;
+COLON    : ':' ;
+DOT      : '.' ;
+AT       : '@' ;
+PIPE     : '|' ;
+BACKSLASH: '\\';
+DOLLAR   : '$' ;
+TILDE    : '~' ;
 
-Identifier
- : [a-zA-Z_\-] [a-zA-Z_0-9\-]*
- ;
+BOOL
+  : 'true'
+  | 'false'
+  ;
 
-Macro
- : [a-zA-Z_] [a-zA-Z_0-9]*
- ;
+NUMBER
+  : INT ('.' DIGIT*)?
+  ;
 
-Column
- : ':' [a-zA-Z_\-] [:a-zA-Z_0-9\-]*
- ;
+IDENTIFIER
+  : [a-zA-Z_\-] [a-zA-Z_0-9\-]* ;
 
-String
- : '\'' ( EscapeSequence | ~('\'') )* '\''
- | '"'  ( EscapeSequence | ~('"') )* '"'
- ;
+MACRO
+  : [a-zA-Z_] [a-zA-Z_0-9]* ;
 
-EscapeSequence
-   :   '\\' ('b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\')
-   |   UnicodeEscape
-   |   OctalEscape
-   ;
+COLUMN
+  : ':' [a-zA-Z_\-] [:a-zA-Z_0-9\-]* ;
 
-fragment
-OctalEscape
-   :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-   |   '\\' ('0'..'7') ('0'..'7')
-   |   '\\' ('0'..'7')
-   ;
+STRING
+  : '\'' ( ESCAPESEQUENCE | ~('\'' ) )* '\''
+  | '"'  ( ESCAPESEQUENCE | ~('"') )* '"'
+  ;
 
-fragment
-UnicodeEscape
-   :   '\\' 'u' HexDigit HexDigit HexDigit HexDigit
-   ;
+fragment ESCAPESEQUENCE
+  : '\\' ('b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\')
+  | UNICODEESCAPE
+  | OCTALESCAPE
+  ;
 
-fragment
-   HexDigit : ('0'..'9'|'a'..'f'|'A'..'F') ;
+fragment OCTALESCAPE
+  : '\\' ('0'..'3') ('0'..'7') ('0'..'7')
+  | '\\' ('0'..'7') ('0'..'7')
+  | '\\' ('0'..'7')
+  ;
 
-Comment
- : ('//' ~[\r\n]* | '/*' .*? '*/' | '--' ~[\r\n]* ) -> skip
- ;
+fragment UNICODEESCAPE
+  : '\\' 'u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT
+  ;
 
-Space
- : [ \t\r\n\u000C]+ -> skip
- ;
+fragment HEXDIGIT
+  : [0-9a-fA-F]
+  ;
 
-fragment Int
- : '-'? [1-9] Digit* [L]*
- | '0'
- ;
+fragment INT
+  : '-'? [1-9] DIGIT* [L]*
+  | '0'
+  ;
 
-fragment Digit
- : [0-9]
- ;
+fragment DIGIT
+  : [0-9]
+  ;
+
+COMMENT
+  : ('//' ~[\r\n]* | '/*' .*? '*/' | '--' ~[\r\n]* ) -> skip
+  ;
+
+SPACE
+  : [ \t\r\n\u000C]+ -> skip
+  ;
