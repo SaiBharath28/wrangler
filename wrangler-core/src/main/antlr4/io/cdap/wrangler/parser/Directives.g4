@@ -323,5 +323,3 @@ COMMENT
 SPACE
   : [ \t\r\n\u000C]+ -> skip
   ;
-
-  

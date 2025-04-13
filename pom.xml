@@ -326,25 +326,6 @@
       </resource>
     </resources>
     <plugins>
-      <plugin>
-        <groupId>org.antlr</groupId>
-        <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.9.2</version>
-        <configuration>
-          <sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
-          <outputDirectory>${project.build.directory}/generated-sources/antlr4</outputDirectory>
-          <listener>true</listener>
-          <visitor>true</visitor>
-        </configuration>
-        <executions>
-          <execution>
-            <id>antlr</id>
-            <goals>
-              <goal>antlr4</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
 
       <!-- Ensure generated sources are included in build path -->
       <plugin>
@@ -392,5 +373,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

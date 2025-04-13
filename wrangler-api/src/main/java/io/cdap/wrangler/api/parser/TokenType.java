@@ -32,3 +32,4 @@ public enum TokenType {
   BYTE_SIZE,      // Added for byte size support
   TIME_DURATION;  // Added for time duration support
 }
+
