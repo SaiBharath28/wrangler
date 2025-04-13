@@ -16,39 +16,55 @@
 
 package io.cdap.wrangler.api.parser;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.cdap.wrangler.api.annotations.PublicEvolving;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Token representing byte size values with units (e.g., 10KB, 1.5MB)
+ * A class for parsing byte size values with units (e.g., 10KB, 1.5MB).
  */
 @PublicEvolving
-public class ByteSize implements Token {
-    private static final Pattern BYTE_PATTERN =
-            Pattern.compile("^(\\d+(?:\\.\\d+)?)\\s*([KMGTP]?i?B?|B)$", Pattern.CASE_INSENSITIVE);
-
+public class ByteSize extends Token {
+    private static final Pattern BYTE_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*([kKmMgGtTpP]?[bB])");
     private final long bytes;
-    private final String originalValue;
 
-    public ByteSize(String value) {
-        this.originalValue = value.trim();
-        this.bytes = parseBytes(this.originalValue);
+    public ByteSize(String str) {
+        super(TokenType.BYTE_SIZE, str);
+        this.bytes = parseBytes(str);
     }
 
-    @Override
-    public Object value() {
+    private long parseBytes(String str) {
+        Matcher matcher = BYTE_PATTERN.matcher(str);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(String.format("Invalid byte size format '%s'. Expected format like 10KB, 1.5MB", str));
+        }
+
+        double value = Double.parseDouble(matcher.group(1));
+        String unit = matcher.group(2).toUpperCase();
+
+        switch (unit) {
+            case "B":
+                return (long) value;
+            case "KB":
+                return (long) (value * 1024L);
+            case "MB":
+                return (long) (value * 1024L * 1024L);
+            case "GB":
+                return (long) (value * 1024L * 1024L * 1024L);
+            case "TB":
+                return (long) (value * 1024L * 1024L * 1024L * 1024L);
+            case "PB":
+                return (long) (value * 1024L * 1024L * 1024L * 1024L * 1024L);
+            default:
+                throw new IllegalArgumentException("Unknown byte size unit: " + unit);
+        }
+    }
+
+    public long getBytes() {
         return bytes;
     }
-
-    @Override
-    public TokenType type() {
-        return TokenType.BYTE_SIZE;
-    }
-
+}
     @Override
     public JsonElement toJson() {
         JsonObject object = new JsonObject();
@@ -103,3 +119,4 @@ public class ByteSize implements Token {
         }
     }
 }
+//

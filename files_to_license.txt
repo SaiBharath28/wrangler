@@ -13,22 +13,3 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package io.cdap.wrangler.api.parser;
-
-/**
- * Enumeration of Token types.
- */
-public enum TokenType {
-  STRING,
-  NUMBER,
-  BOOLEAN,
-  IDENTIFIER,
-  COLUMN,
-  COLUMN_LIST,
-  EXPRESSION,
-  TEXT,
-  PROPERTIES,
-  BYTE_SIZE,      // Added for byte size support
-  TIME_DURATION;  // Added for time duration support
-}

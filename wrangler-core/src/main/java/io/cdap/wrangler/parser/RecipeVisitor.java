@@ -44,6 +44,9 @@ import io.cdap.wrangler.parser.grammar.DirectivesParser;
 import io.cdap.wrangler.parser.grammar.DirectivesBaseVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.cdap.wrangler.parser.grammar.DirectivesParser;
+import io.cdap.wrangler.parser.grammar.DirectivesParser.ByteSizeArgContext;
+import io.cdap.wrangler.parser.grammar.DirectivesParser.TimeDurationArgContext;
 
 
 import java.util.ArrayList;
@@ -103,6 +106,37 @@ public final class RecipeVisitor extends DirectivesBaseVisitor<RecipeSymbol.Buil
   public RecipeSymbol.Builder visitIdentifier(DirectivesParser.IdentifierContext ctx) {
     builder.addToken(new Identifier(ctx.Identifier().getText()));
     return super.visitIdentifier(ctx);
+  }
+
+  // Add these methods to your RecipeVisitor class
+
+  @Override
+  public TokenGroup visitByteSizeArg(DirectivesParser.ByteSizeArgContext ctx) {
+    return new TokenGroup(new ByteSize(ctx.getText()));
+  }
+
+  @Override
+  public TokenGroup visitTimeDurationArg(DirectivesParser.TimeDurationArgContext ctx) {
+    return new TokenGroup(new TimeDuration(ctx.getText()));
+  }
+
+  // Update the visitValue method to handle the new types
+  @Override
+  public TokenGroup visitValue(DirectivesParser.ValueContext ctx) {
+    if (ctx.numericValue() != null) {
+      return visitNumber(ctx.numericValue().number());
+    } else if (ctx.stringValue() != null) {
+      return visitText(ctx.stringValue().text());
+    } else if (ctx.identifierValue() != null) {
+      return visitIdentifier(ctx.identifierValue().identifier());
+    } else if (ctx.booleanValue() != null) {
+      return visitBool(ctx.booleanValue().bool());
+    } else if (ctx.byteSizeValue() != null) {
+      return visitByteSizeArg(ctx.byteSizeValue().byteSizeArg());
+    } else if (ctx.timeDurationValue() != null) {
+      return visitTimeDurationArg(ctx.timeDurationValue().timeDurationArg());
+    }
+    throw new IllegalArgumentException("Unsupported value type");
   }
 
   /**

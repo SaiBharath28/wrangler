@@ -63,8 +63,6 @@ directive
     | stringList
     | numberRanges
     | properties
-    | byteSizeArg
-    | timeDurationArg
     )*?
   ;
 
@@ -129,7 +127,7 @@ propertyList
   ;
 
 property
-  : IDENTIFIER '=' ( text | number | bool | byteSizeArg | timeDurationArg )
+  : IDENTIFIER '=' ( text | number | bool | BYTE_SIZE | TIME_DURATION )
   ;
 
 numberRanges
@@ -145,16 +143,8 @@ value
   | text           #stringValue
   | identifier     #identifierValue
   | bool           #booleanValue
-  | byteSizeArg    #byteSizeValue
-  | timeDurationArg #timeDurationValue
-  ;
-
-byteSizeArg
-  : BYTE_SIZE
-  ;
-
-timeDurationArg
-  : TIME_DURATION
+  | BYTE_SIZE      #byteSizeValue
+  | TIME_DURATION  #timeDurationValue
   ;
 
 ecommand
@@ -213,16 +203,17 @@ identifierList
 // Lexer Rules (all uppercase)
 // =======================
 
-fragment DIGIT : [0-9];
-fragment BYTE_UNIT : [kKmMgGtTpP][bB] | [bB];
-fragment TIME_UNIT : 'ns'|'us'|'ms'|'s'|'m'|'h'|'d';
+fragment BYTE_UNIT
+  : [kKmMgGtTpPeE] [i]? [bB]
+  | [bB]
+  ;
 
 BYTE_SIZE
-  : DIGIT+ ('.' DIGIT+)? SPACE* BYTE_UNIT
+  : [0-9]+ ('.' [0-9]+)? SPACE* BYTE_UNIT
   ;
 
 TIME_DURATION
-  : DIGIT+ ('.' DIGIT+)? SPACE* TIME_UNIT
+  : [0-9]+ ('.' [0-9]+)? SPACE* ('ns'|'us'|'ms'|'s'|'m'|'h'|'d')
   ;
 
 OBRACE   : '{';
@@ -279,7 +270,7 @@ BOOL
   ;
 
 NUMBER
-  : '-'? DIGIT+ ('.' DIGIT+)?
+  : INT ('.' DIGIT*)?
   ;
 
 IDENTIFIER
@@ -316,6 +307,15 @@ fragment HEXDIGIT
   : [0-9a-fA-F]
   ;
 
+fragment INT
+  : '-'? [1-9] DIGIT* [L]*
+  | '0'
+  ;
+
+fragment DIGIT
+  : [0-9]
+  ;
+
 COMMENT
   : ('//' ~[\r\n]* | '/*' .*? '*/' | '--' ~[\r\n]* ) -> skip
   ;
@@ -323,5 +323,3 @@ COMMENT
 SPACE
   : [ \t\r\n\u000C]+ -> skip
   ;
-
-  
